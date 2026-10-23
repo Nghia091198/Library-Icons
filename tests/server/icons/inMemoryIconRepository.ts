@@ -124,8 +124,12 @@ export function createInMemoryIconRepository(): InMemoryIconRepository {
     },
 
     async listIcons(filter) {
-      const query = filter.query?.trim().toLowerCase();
-      const slugQuery = query ? toSlugSearchTerm(query) : undefined;
+      const terms = [filter.query, ...(filter.alternativeQueries ?? [])]
+        .map((term) => term?.trim().toLowerCase() ?? '')
+        .filter((term) => term.length > 0);
+      const matchesSearch = (icon: IconRecord) =>
+        terms.length === 0 ||
+        terms.some((term) => icon.slug.includes(toSlugSearchTerm(term)) || icon.name.toLowerCase().includes(term));
       const byName = (first: IconRecord, second: IconRecord) =>
         first.slug.localeCompare(second.slug) || first.id.localeCompare(second.id);
       const byRecent = (first: IconRecord, second: IconRecord) =>
@@ -135,7 +139,7 @@ export function createInMemoryIconRepository(): InMemoryIconRepository {
         .filter((icon) => !filter.categoryId || icon.categoryId === filter.categoryId)
         .filter((icon) => !filter.status || icon.status === filter.status)
         .filter((icon) => !filter.activeOnly || icon.status !== ICON_STATUS.archived)
-        .filter((icon) => !query || icon.slug.includes(slugQuery ?? query) || icon.name.toLowerCase().includes(query))
+        .filter(matchesSearch)
         .sort(filter.orderBy === ICON_LIST_ORDER.name ? byName : byRecent);
       return {
         items: matching.slice(filter.offset, filter.offset + filter.limit).map(toIconSummary),

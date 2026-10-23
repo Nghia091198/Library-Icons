@@ -8,6 +8,7 @@ import type { IconRepository } from '@/server/icons/iconRepository';
 import { createIconService } from '@/server/icons/iconService';
 import { HTTP_STATUS, HttpError, toErrorBody } from '@/server/lib/httpError';
 import type { Logger } from '@/server/lib/logger';
+import { createIconCatalog } from '@/server/mcp/iconCatalog';
 import { requireAdmin } from '@/server/middleware/requireAdmin';
 import { createPublicRateLimiter, publicApiGuard, type PublicRateLimiter } from '@/server/middleware/publicApiGuard';
 import { registerOpenApiSecurity } from '@/server/openapi';
@@ -15,6 +16,7 @@ import { registerAdminIcons } from '@/server/routes/admin';
 import { registerAdminMeRoute } from '@/server/routes/adminMe';
 import { registerAuthRoutes } from '@/server/routes/auth';
 import { registerHealthRoute } from '@/server/routes/health';
+import { registerMcpRoute } from '@/server/routes/mcp';
 import { registerPublicIconRoutes } from '@/server/routes/public/publicIcons';
 import { API_PREFIX, API_ROUTE } from '@/shared/constants/apiRoutes';
 import { ERROR_CODE } from '@/shared/constants/errorCodes';
@@ -57,7 +59,8 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   app.notFound((c) => c.json(toErrorBody(ERROR_CODE.notFound, 'Route not found'), HTTP_STATUS.notFound));
 
   registerOpenApiSecurity(app);
-  app.use(`${API_PREFIX.public}/*`, publicApiGuard(deps.publicRateLimiter ?? createPublicRateLimiter()));
+  const publicRateLimit = publicApiGuard(deps.publicRateLimiter ?? createPublicRateLimiter());
+  app.use(`${API_PREFIX.public}/*`, publicRateLimit);
   app.use(
     `${API_PREFIX.admin}/*`,
     bodyLimit({
@@ -74,6 +77,7 @@ export function createApp(deps: AppDeps): OpenAPIHono<AppEnv> {
   registerAuthRoutes(app, deps);
   registerAdminMeRoute(app);
   registerAdminIcons(app, iconService);
+  registerMcpRoute(app, createIconCatalog({ service: iconService, repository: deps.iconRepository }), publicRateLimit);
 
   app.doc31(API_ROUTE.openApiSpec, {
     openapi: '3.1.0',

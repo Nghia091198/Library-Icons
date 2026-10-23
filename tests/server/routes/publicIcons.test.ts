@@ -101,6 +101,17 @@ describe('public icon API', () => {
     expect(searchWithSpace.items.map((icon) => icon.slug)).toEqual(['arrow-down']);
   });
 
+  it('ranks search results by relevance and understands common words', async () => {
+    const { app, send, setId } = await setupLibrary();
+    await createIcon(send, setId, 'verified-user', 'M12 2l8 4v6c0 5-4 9-8 10', ICON_STATUS.published);
+    await createIcon(send, setId, 'person', 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', ICON_STATUS.published);
+    const slugsFor = async (query: string) =>
+      (await json<PublicIconListResponse>(await app.request(`${API_ROUTE.publicIcons}?q=${query}`))).items.map((icon) => icon.slug);
+
+    expect(await slugsFor('user')).toEqual(['person', 'verified-user']);
+    expect(await slugsFor('down')).toEqual(['arrow-down']);
+  });
+
   it('pages through the full list without repeating or skipping icons', async () => {
     const { app, send, setId } = await setupLibrary();
     await createIcon(send, setId, 'bell', 'M6 16v-5a6 6 0 0 1 12 0v5', ICON_STATUS.published);

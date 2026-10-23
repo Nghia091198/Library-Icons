@@ -32,6 +32,8 @@ export interface IconListFilter {
   status?: IconStatus;
   activeOnly?: boolean;
   query?: string;
+  // Từ khoá thay thế (từ đồng nghĩa): icon khớp query HOẶC bất kỳ từ nào ở đây.
+  alternativeQueries?: string[];
   // Mặc định recent. Luôn kèm id làm tiêu chí phụ để phân trang không lặp hay sót khi trùng giá trị sắp xếp.
   orderBy?: IconListOrder;
   offset: number;
