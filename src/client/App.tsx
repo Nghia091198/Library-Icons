@@ -11,8 +11,8 @@ const AdminLayout = lazy(() => import('@/client/admin/AdminLayout').then((module
 const AdminLoginPage = lazy(() =>
   import('@/client/admin/AdminLoginPage').then((module) => ({ default: module.AdminLoginPage })),
 );
-const IconSettingsPage = lazy(() =>
-  import('@/client/admin/icons/IconSettingsPage').then((module) => ({ default: module.IconSettingsPage })),
+const IconManagementPage = lazy(() =>
+  import('@/client/admin/icons/IconManagementPage').then((module) => ({ default: module.IconManagementPage })),
 );
 const UploadPage = lazy(() => import('@/client/admin/upload/UploadPage').then((module) => ({ default: module.UploadPage })));
 
@@ -32,7 +32,7 @@ export function App() {
           <Route path={CLIENT_ROUTE.adminLogin} element={<AdminLoginPage />} />
           <Route path={CLIENT_ROUTE.admin} element={<AdminLayout />}>
             <Route index element={<Navigate to={CLIENT_ROUTE.adminIcons} replace />} />
-            <Route path={CLIENT_ROUTE.adminIcons} element={<IconSettingsPage />} />
+            <Route path={CLIENT_ROUTE.adminIcons} element={<IconManagementPage />} />
             <Route path={CLIENT_ROUTE.adminUpload} element={<UploadPage />} />
             <Route path="*" element={<Navigate to={CLIENT_ROUTE.adminIcons} replace />} />
           </Route>

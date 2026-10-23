@@ -3,7 +3,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInAdmin } from '@/client/admin/adminService';
 import { ApiError } from '@/client/common/apiClient';
+import { BRAND_LOGO_URL } from '@/client/common/brand';
 import { CLIENT_ROUTE } from '@/client/common/clientRoutes';
+import { DARK_COLOR } from '@/client/common/darkTheme';
+import { DarkThemeProvider } from '@/client/common/DarkThemeProvider';
 import { ERROR_CODE, type ErrorCode } from '@/shared/constants/errorCodes';
 import type { LoginRequest } from '@/shared/types/api';
 
@@ -21,6 +24,14 @@ function describeSignInError(error: unknown): string {
 }
 
 export function AdminLoginPage() {
+  return (
+    <DarkThemeProvider>
+      <AdminLoginForm />
+    </DarkThemeProvider>
+  );
+}
+
+function AdminLoginForm() {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,20 +49,32 @@ export function AdminLoginPage() {
   }
 
   return (
-    <Flex align="center" justify="center" style={{ minHeight: '100vh', padding: 24, background: '#f5f5f5' }}>
-      <Card style={{ width: '100%', maxWidth: 400 }}>
-        <Typography.Title level={4} style={{ marginTop: 0 }}>
-          Đăng nhập admin
-        </Typography.Title>
+    <Flex
+      align="center"
+      justify="center"
+      style={{
+        minHeight: '100vh',
+        padding: 24,
+        background: `radial-gradient(ellipse at 50% 0%, ${DARK_COLOR.primary}33, transparent 60%), ${DARK_COLOR.background}`,
+      }}
+    >
+      <Card style={{ width: '100%', maxWidth: 400, background: DARK_COLOR.surface, border: `1px solid ${DARK_COLOR.border}` }}>
+        <Flex vertical align="center" gap={8} style={{ marginBottom: 24 }}>
+          <img src={BRAND_LOGO_URL} width={44} height={44} alt="" />
+          <Typography.Title level={1} style={{ margin: 0, fontSize: 22 }}>
+            Lib Icons Admin
+          </Typography.Title>
+          <Typography.Text type="secondary">Đăng nhập để quản lý thư viện icon</Typography.Text>
+        </Flex>
         <Form layout="vertical" requiredMark={false} onFinish={(values: LoginRequest) => void handleFinish(values)}>
           <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email', message: 'Nhập email hợp lệ' }]}>
-            <Input autoComplete="email" />
+            <Input autoComplete="email" size="large" />
           </Form.Item>
           <Form.Item name="password" label="Mật khẩu" rules={[{ required: true, message: 'Nhập mật khẩu' }]}>
-            <Input.Password autoComplete="current-password" />
+            <Input.Password autoComplete="current-password" size="large" />
           </Form.Item>
           {errorMessage && <Alert type="error" showIcon message={errorMessage} style={{ marginBottom: 16 }} />}
-          <Button type="primary" htmlType="submit" block loading={isSubmitting}>
+          <Button type="primary" htmlType="submit" block size="large" loading={isSubmitting}>
             Đăng nhập
           </Button>
         </Form>

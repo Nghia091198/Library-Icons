@@ -14,6 +14,7 @@ import {
   SVG_SOURCE_LIMIT,
 } from '@/shared/constants/icons';
 import type {
+  AdminIconStatsResponse,
   CreateIconsResponse,
   IconCategoryListResponse,
   IconDetailDto,
@@ -312,3 +313,15 @@ export const PublishDraftsRequestSchema = z
 export const PublishDraftsResponseSchema = z
   .object({ published: z.number().int() })
   .openapi('PublishDraftsResponse') satisfies z.ZodType<PublishDraftsResponse>;
+
+export const AdminIconStatsSchema = z
+  .object({
+    total: z.number().int(),
+    byStatus: z.object({
+      [ICON_STATUS.draft]: z.number().int(),
+      [ICON_STATUS.published]: z.number().int(),
+      [ICON_STATUS.archived]: z.number().int(),
+    }),
+    bySet: z.array(z.object({ setId: z.string().uuid(), count: z.number().int() })),
+  })
+  .openapi('AdminIconStats') satisfies z.ZodType<AdminIconStatsResponse>;

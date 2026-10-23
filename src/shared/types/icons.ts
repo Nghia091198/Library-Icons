@@ -95,6 +95,13 @@ export interface PublishDraftsRequest {
   categoryId?: string;
 }
 
+// Số liệu cho sidebar admin: theo trạng thái (gồm cả lưu trữ) và theo bộ (không tính icon đã lưu trữ).
+export interface AdminIconStatsResponse {
+  total: number;
+  byStatus: Record<IconStatus, number>;
+  bySet: Array<{ setId: string; count: number }>;
+}
+
 export interface PublishDraftsResponse {
   published: number;
 }

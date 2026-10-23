@@ -3,8 +3,8 @@ import { APP_HEADER_HEIGHT, AppShell, HEADER_LINK_STYLE, HeaderLink } from '@/cl
 import { CLIENT_ROUTE } from '@/client/common/clientRoutes';
 import { DARK_COLOR } from '@/client/common/darkTheme';
 import { DarkThemeProvider } from '@/client/common/DarkThemeProvider';
+import { NavSkeleton } from '@/client/common/NavSkeleton';
 import { CategoryNav } from '@/client/gallery/CategoryNav';
-import { CategoryMenuSkeleton } from '@/client/gallery/GallerySkeletons';
 import { GuideNav } from '@/client/gallery/GuideNav';
 import { useGalleryCategories } from '@/client/gallery/useGallery';
 import { API_ROUTE } from '@/shared/constants/apiRoutes';
@@ -36,7 +36,7 @@ function GalleryShell() {
   ) : (
     <nav aria-label="Icon categories">
       {isLoading && categories.length === 0 ? (
-        <CategoryMenuSkeleton count={CATEGORY_SKELETON_ROWS} />
+        <NavSkeleton count={CATEGORY_SKELETON_ROWS} />
       ) : (
         <CategoryNav categories={categories} totalCount={totalCount} activePath={pathname} />
       )}

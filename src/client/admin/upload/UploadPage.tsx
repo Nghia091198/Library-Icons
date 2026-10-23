@@ -2,7 +2,7 @@ import { Button, Card, Col, Flex, Row, Spin, Typography, theme } from 'antd';
 import { useMemo, useState } from 'react';
 import { createIcons } from '@/client/admin/icons/iconAdminService';
 import { API_ERROR_TEXT, describeApiError } from '@/client/admin/icons/iconTexts';
-import { useIconSets } from '@/client/admin/icons/useIcons';
+import { useAdminSets } from '@/client/admin/icons/adminData';
 import { CandidateList } from '@/client/admin/upload/CandidateList';
 import { SourceInput } from '@/client/admin/upload/SourceInput';
 import { toCandidateRows, useCandidateSelection, type CandidateRow } from '@/client/admin/upload/useCandidateSelection';
@@ -34,7 +34,7 @@ function summarizeBySet(rows: CandidateRow[], sets: IconSetDto[]): string {
 export function UploadPage() {
   const { token } = theme.useToken();
   const message = useMessage();
-  const { sets } = useIconSets();
+  const { sets } = useAdminSets();
   const [text, setText] = useState('');
   const [files, setFiles] = useState<SvgSourceInput[]>([]);
   const [setOverrides, setSetOverrides] = useState<Record<string, string>>({});

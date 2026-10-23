@@ -64,6 +64,10 @@ export function replaceIconSvg(id: string, body: ReplaceIconSvgRequest): Promise
   return api.put<IconDetailDto>(fillRoute(API_ROUTE_TEMPLATE.adminIconSvg, { id }), body);
 }
 
+export function moveIconToSet(id: string, setId: string): Promise<IconDetailDto> {
+  return api.post<IconDetailDto>(fillRoute(API_ROUTE_TEMPLATE.adminIconMoveSet, { id }), { setId });
+}
+
 export function changeIconStatus(id: string, action: IconStatusAction): Promise<IconDetailDto> {
   return api.post<IconDetailDto>(fillRoute(ICON_STATUS_ACTION[action], { id }));
 }

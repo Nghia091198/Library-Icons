@@ -15,6 +15,7 @@ export const API_ROUTE = {
   adminMe: `${API_PREFIX.admin}/me`,
   adminIconSets: `${API_PREFIX.admin}/icon-sets`,
   adminIconCategories: `${API_PREFIX.admin}/icon-categories`,
+  adminIconStats: `${API_PREFIX.admin}/icon-stats`,
   adminIcons: `${API_PREFIX.admin}/icons`,
   adminIconsPreview: `${API_PREFIX.admin}/icons/preview`,
   adminIconsPublishDrafts: `${API_PREFIX.admin}/icons/publish-drafts`,
