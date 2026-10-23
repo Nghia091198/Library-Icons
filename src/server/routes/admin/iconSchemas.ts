@@ -1,6 +1,8 @@
 import { z } from '@hono/zod-openapi';
 import { ERROR_CODE } from '@/shared/constants/errorCodes';
 import {
+  BULK_ICON_ACTION,
+  BULK_ICON_LIMIT,
   CREATABLE_ICON_STATUSES,
   ICON_LIST_PAGE_SIZE,
   ICON_METADATA_LIMIT,
@@ -14,6 +16,8 @@ import {
   SVG_SOURCE_LIMIT,
 } from '@/shared/constants/icons';
 import type {
+  AdminIconStatsResponse,
+  BulkIconResponse,
   CreateIconsResponse,
   IconCategoryListResponse,
   IconDetailDto,
@@ -312,3 +316,30 @@ export const PublishDraftsRequestSchema = z
 export const PublishDraftsResponseSchema = z
   .object({ published: z.number().int() })
   .openapi('PublishDraftsResponse') satisfies z.ZodType<PublishDraftsResponse>;
+
+export const BulkIconRequestSchema = z
+  .object({
+    ids: z.array(z.string().uuid()).min(1).max(BULK_ICON_LIMIT),
+    action: z.nativeEnum(BULK_ICON_ACTION),
+    categoryId: z.string().uuid().nullable().optional(),
+  })
+  .openapi('BulkIconRequest');
+
+export const BulkIconResponseSchema = z
+  .object({
+    succeeded: z.number().int(),
+    failed: z.array(z.object({ id: z.string().uuid(), code: z.nativeEnum(ERROR_CODE), message: z.string() })),
+  })
+  .openapi('BulkIconResponse') satisfies z.ZodType<BulkIconResponse>;
+
+export const AdminIconStatsSchema = z
+  .object({
+    total: z.number().int(),
+    byStatus: z.object({
+      [ICON_STATUS.draft]: z.number().int(),
+      [ICON_STATUS.published]: z.number().int(),
+      [ICON_STATUS.archived]: z.number().int(),
+    }),
+    bySet: z.array(z.object({ setId: z.string().uuid(), count: z.number().int() })),
+  })
+  .openapi('AdminIconStats') satisfies z.ZodType<AdminIconStatsResponse>;

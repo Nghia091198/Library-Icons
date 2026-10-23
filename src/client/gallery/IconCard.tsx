@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { downloadTextFile } from '@/client/common/clipboard';
 import { toSvgDataUri } from '@/client/common/svgFiles';
 import { useCopyToClipboard } from '@/client/common/useCopyToClipboard';
-import { GALLERY_COLOR, previewColors } from '@/client/gallery/galleryTheme';
+import { DARK_COLOR, previewColors } from '@/client/common/darkTheme';
 import type { PublicIconDto } from '@/shared/types/icons';
 
 const PREVIEW_ICON_SIZE = 28;
@@ -28,8 +28,8 @@ export function IconCard({ icon, onOpen }: IconCardProps) {
         onMouseLeave={() => setHovered(false)}
         style={{
           borderRadius: token.borderRadiusLG,
-          border: `1px solid ${isHovered ? token.colorPrimary : GALLERY_COLOR.cardBorder}`,
-          background: GALLERY_COLOR.card,
+          border: `1px solid ${isHovered ? token.colorPrimary : DARK_COLOR.cardBorder}`,
+          background: DARK_COLOR.card,
           boxShadow: isHovered ? `0 0 0 3px ${token.colorPrimaryBg}` : 'none',
           overflow: 'hidden',
           transition: 'border-color 0.15s, box-shadow 0.15s',
@@ -58,7 +58,7 @@ export function IconCard({ icon, onOpen }: IconCardProps) {
               width: COLORED_TILE_SIZE,
               height: COLORED_TILE_SIZE,
               borderRadius: 10,
-              background: icon.isMulticolor ? GALLERY_COLOR.coloredIconSurface : 'transparent',
+              background: icon.isMulticolor ? DARK_COLOR.coloredIconSurface : 'transparent',
             }}
           >
             <img
@@ -69,7 +69,7 @@ export function IconCard({ icon, onOpen }: IconCardProps) {
             />
           </span>
         </button>
-        <Flex justify="space-around" style={{ borderTop: `1px solid ${GALLERY_COLOR.cardBorder}`, padding: '2px 4px' }}>
+        <Flex justify="space-around" style={{ borderTop: `1px solid ${DARK_COLOR.cardBorder}`, padding: '2px 4px' }}>
           <Tooltip title="Copy SVG">
             <Button type="text" size="small" icon={<CopyOutlined />} aria-label={`Copy SVG ${icon.slug}`} onClick={() => void copy(icon.svg, 'Đã copy mã SVG')} />
           </Tooltip>

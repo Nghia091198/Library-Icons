@@ -1,8 +1,11 @@
 import { createRoute, type OpenAPIHono } from '@hono/zod-openapi';
 import type { AppEnv } from '@/server/appEnv';
+import { runBulkIconAction } from '@/server/icons/bulkIconActions';
 import type { IconService } from '@/server/icons/iconService';
 import { ADMIN_SECURITY_SCHEME, errorResponse, jsonContent, OPENAPI_TAG } from '@/server/openapi';
 import {
+  BulkIconRequestSchema,
+  BulkIconResponseSchema,
   CreateIconsRequestSchema,
   CreateIconsResponseSchema,
   IconDetailSchema,
@@ -18,6 +21,7 @@ import {
   UpdateIconSchema,
 } from '@/server/routes/admin/iconSchemas';
 import { API_ROUTE, API_ROUTE_TEMPLATE } from '@/shared/constants/apiRoutes';
+import { BULK_ICON_LIMIT } from '@/shared/constants/icons';
 
 const security = [{ [ADMIN_SECURITY_SCHEME]: [] }];
 const tags = [OPENAPI_TAG.icons];
@@ -82,6 +86,22 @@ const publishDraftsRoute = createRoute({
   request: { body: { content: jsonContent(PublishDraftsRequestSchema), required: true } },
   responses: {
     200: { content: jsonContent(PublishDraftsResponseSchema), description: 'Number of icons published' },
+    401: unauthorized,
+    422: invalidBody,
+  },
+});
+
+const bulkRoute = createRoute({
+  method: 'post',
+  path: API_ROUTE.adminIconsBulk,
+  tags,
+  security,
+  summary: `Apply one action to up to ${BULK_ICON_LIMIT} selected icons`,
+  description:
+    'Each icon goes through the same rules as the single-icon action; icons the action does not apply to are skipped and listed under "failed".',
+  request: { body: { content: jsonContent(BulkIconRequestSchema), required: true } },
+  responses: {
+    200: { content: jsonContent(BulkIconResponseSchema), description: 'How many icons succeeded and which failed' },
     401: unauthorized,
     422: invalidBody,
   },
@@ -195,6 +215,8 @@ export function registerAdminIconRoutes(app: OpenAPIHono<AppEnv>, service: IconS
   app.openapi(publishDraftsRoute, async (c) =>
     c.json(await service.publishDrafts(c.req.valid('json'), c.get('adminEmail')), 200),
   );
+
+  app.openapi(bulkRoute, async (c) => c.json(await runBulkIconAction(service, c.req.valid('json'), c.get('adminEmail')), 200));
 
   app.openapi(getIconRoute, async (c) => c.json(await service.getIcon(c.req.valid('param').id), 200));
 

@@ -1,7 +1,7 @@
 import { CopyOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useCopyToClipboard } from '@/client/common/useCopyToClipboard';
-import { GALLERY_COLOR } from '@/client/gallery/galleryTheme';
+import { DARK_COLOR } from '@/client/common/darkTheme';
 
 const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
@@ -20,7 +20,7 @@ export function CodeBlock({ code, label }: CodeBlockProps) {
           top: 10,
           left: 16,
           fontSize: 12,
-          color: GALLERY_COLOR.textMuted,
+          color: DARK_COLOR.textMuted,
           fontFamily: MONOSPACE,
         }}
       >
@@ -32,9 +32,9 @@ export function CodeBlock({ code, label }: CodeBlockProps) {
           padding: '34px 56px 16px 16px',
           overflowX: 'auto',
           borderRadius: 10,
-          border: `1px solid ${GALLERY_COLOR.border}`,
-          background: GALLERY_COLOR.background,
-          color: GALLERY_COLOR.text,
+          border: `1px solid ${DARK_COLOR.border}`,
+          background: DARK_COLOR.background,
+          color: DARK_COLOR.text,
           fontFamily: MONOSPACE,
           fontSize: 13,
           lineHeight: 1.65,

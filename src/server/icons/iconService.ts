@@ -29,6 +29,7 @@ import {
   type IconStatus,
 } from '@/shared/constants/icons';
 import type {
+  AdminIconStatsResponse,
   CreateIconItem,
   CreateIconResult,
   CreateIconSetRequest,
@@ -266,6 +267,23 @@ export function createIconService({ repository, now = () => new Date() }: IconSe
         items: categories.map((category) => ({ ...category, iconCount: counts.get(category.id) ?? 0 })),
         totalCount,
         uncategorizedCount: counts.get(null) ?? 0,
+      };
+    },
+
+    async getAdminStats(): Promise<AdminIconStatsResponse> {
+      const countWhere = async (filter: Omit<Parameters<IconRepository['listIcons']>[0], 'offset' | 'limit'>) =>
+        (await repository.listIcons({ ...filter, offset: 0, limit: 1 })).total;
+      const sets = await repository.listSets();
+      const [draft, published, archived, setCounts] = await Promise.all([
+        countWhere({ status: ICON_STATUS.draft }),
+        countWhere({ status: ICON_STATUS.published }),
+        countWhere({ status: ICON_STATUS.archived }),
+        Promise.all(sets.map((set) => countWhere({ setId: set.id, activeOnly: true }))),
+      ]);
+      return {
+        total: draft + published + archived,
+        byStatus: { [ICON_STATUS.draft]: draft, [ICON_STATUS.published]: published, [ICON_STATUS.archived]: archived },
+        bySet: sets.map((set, index) => ({ setId: set.id, count: setCounts[index] ?? 0 })),
       };
     },
 

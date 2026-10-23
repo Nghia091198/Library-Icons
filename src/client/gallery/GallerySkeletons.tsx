@@ -1,5 +1,5 @@
 import { Flex } from 'antd';
-import { GALLERY_COLOR } from '@/client/gallery/galleryTheme';
+import { DARK_COLOR } from '@/client/common/darkTheme';
 
 // Kích thước khớp IconCard: khung 16:10, thanh 3 nút cao 29px, dòng tên bên dưới.
 const ACTION_BAR_HEIGHT = 29;
@@ -17,15 +17,15 @@ export function IconCardSkeleton() {
       <div
         style={{
           borderRadius: 8,
-          border: `1px solid ${GALLERY_COLOR.cardBorder}`,
-          background: GALLERY_COLOR.card,
+          border: `1px solid ${DARK_COLOR.cardBorder}`,
+          background: DARK_COLOR.card,
           overflow: 'hidden',
         }}
       >
         <div style={{ aspectRatio: '16 / 10', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="skeleton-block" style={{ width: 28, height: 28, borderRadius: 6 }} />
         </div>
-        <div style={{ height: ACTION_BAR_HEIGHT, borderTop: `1px solid ${GALLERY_COLOR.cardBorder}` }} />
+        <div style={{ height: ACTION_BAR_HEIGHT, borderTop: `1px solid ${DARK_COLOR.cardBorder}` }} />
       </div>
       <div className="skeleton-block" style={{ height: NAME_LINE_HEIGHT, width: '60%', alignSelf: 'center', borderRadius: 4 }} />
     </Flex>
@@ -39,18 +39,5 @@ export function IconSkeletonCards({ count }: { count: number }) {
         <IconCardSkeleton key={index} />
       ))}
     </>
-  );
-}
-
-export function CategoryMenuSkeleton({ count }: { count: number }) {
-  return (
-    <Flex vertical gap={6} style={{ padding: '12px 16px' }} aria-hidden="true">
-      {Array.from({ length: count }, (_unused, index) => (
-        <Flex key={index} align="center" justify="space-between" style={{ height: 40 }}>
-          <div className="skeleton-block" style={{ height: 12, width: `${50 + ((index * 17) % 35)}%`, borderRadius: 4 }} />
-          <div className="skeleton-block" style={{ height: 20, width: 36, borderRadius: 10 }} />
-        </Flex>
-      ))}
-    </Flex>
   );
 }

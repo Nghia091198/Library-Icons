@@ -1,6 +1,6 @@
 import { theme, type ThemeConfig } from 'antd';
 
-export const GALLERY_COLOR = {
+export const DARK_COLOR = {
   background: '#0a1020',
   surface: '#0f1a2e',
   surfaceRaised: '#13203a',
@@ -21,30 +21,30 @@ export const GALLERY_COLOR = {
 
 export function previewColors(isMulticolor: boolean): { surface: string; icon: string } {
   return isMulticolor
-    ? { surface: GALLERY_COLOR.coloredIconSurface, icon: GALLERY_COLOR.iconOnColoredSurface }
-    : { surface: GALLERY_COLOR.background, icon: GALLERY_COLOR.iconOnCard };
+    ? { surface: DARK_COLOR.coloredIconSurface, icon: DARK_COLOR.iconOnColoredSurface }
+    : { surface: DARK_COLOR.background, icon: DARK_COLOR.iconOnCard };
 }
 
-export const GALLERY_THEME: ThemeConfig = {
+export const DARK_THEME: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
   token: {
-    colorPrimary: GALLERY_COLOR.primary,
-    colorLink: GALLERY_COLOR.link,
-    colorBgBase: GALLERY_COLOR.background,
-    colorTextBase: GALLERY_COLOR.text,
-    colorBorder: GALLERY_COLOR.border,
+    colorPrimary: DARK_COLOR.primary,
+    colorLink: DARK_COLOR.link,
+    colorBgBase: DARK_COLOR.background,
+    colorTextBase: DARK_COLOR.text,
+    colorBorder: DARK_COLOR.border,
     borderRadius: 8,
   },
   components: {
     Layout: {
-      bodyBg: GALLERY_COLOR.background,
-      headerBg: GALLERY_COLOR.background,
-      siderBg: GALLERY_COLOR.background,
+      bodyBg: DARK_COLOR.background,
+      headerBg: DARK_COLOR.background,
+      siderBg: DARK_COLOR.background,
     },
     Menu: {
       itemBg: 'transparent',
-      itemSelectedBg: GALLERY_COLOR.surfaceRaised,
-      itemSelectedColor: GALLERY_COLOR.text,
+      itemSelectedBg: DARK_COLOR.surfaceRaised,
+      itemSelectedColor: DARK_COLOR.text,
     },
   },
 };

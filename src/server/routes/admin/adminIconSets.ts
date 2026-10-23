@@ -3,6 +3,7 @@ import type { AppEnv } from '@/server/appEnv';
 import type { IconService } from '@/server/icons/iconService';
 import { ADMIN_SECURITY_SCHEME, errorResponse, jsonContent, OPENAPI_TAG } from '@/server/openapi';
 import {
+  AdminIconStatsSchema,
   CreateIconSetSchema,
   IconCategoryListSchema,
   IconSetListSchema,
@@ -35,6 +36,18 @@ const listCategoriesRoute = createRoute({
   summary: 'List icon categories with the number of active icons in each',
   responses: {
     200: { content: jsonContent(IconCategoryListSchema), description: 'All categories, in display order' },
+    401: errorResponse('Admin session required'),
+  },
+});
+
+const statsRoute = createRoute({
+  method: 'get',
+  path: API_ROUTE.adminIconStats,
+  tags,
+  security,
+  summary: 'Icon counts by status and by set, for the admin sidebar',
+  responses: {
+    200: { content: jsonContent(AdminIconStatsSchema), description: 'Library counts' },
     401: errorResponse('Admin session required'),
   },
 });
@@ -73,6 +86,7 @@ const updateSetRoute = createRoute({
 export function registerAdminIconSetRoutes(app: OpenAPIHono<AppEnv>, service: IconService): void {
   app.openapi(listSetsRoute, async (c) => c.json({ items: await service.listSets() }, 200));
   app.openapi(listCategoriesRoute, async (c) => c.json(await service.listCategories(), 200));
+  app.openapi(statsRoute, async (c) => c.json(await service.getAdminStats(), 200));
 
   app.openapi(createSetRoute, async (c) => {
     const set = await service.createSet(c.req.valid('json'), c.get('adminEmail'));

@@ -1,12 +1,15 @@
 import { Alert, Checkbox, Empty, Flex, Input, List, Select, Tag, theme, Typography } from 'antd';
 import { describeDetectedStyle, describeIssue } from '@/client/admin/icons/iconTexts';
 import type { CandidateChoice, CandidateRow } from '@/client/admin/upload/useCandidateSelection';
+import { DARK_COLOR, previewColors } from '@/client/common/darkTheme';
 import { toSvgDataUri } from '@/client/common/svgFiles';
 import { isValidSlug, SVG_ISSUE_SEVERITY } from '@/shared/constants/icons';
 import type { IconSetDto, PreviewCandidate, SvgIssue } from '@/shared/types/icons';
 
 const MONOSPACE = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const PREVIEW_SIZE = 32;
+
+const colors = (candidate: PreviewCandidate) => previewColors(candidate.isMulticolor);
 
 interface CandidateListProps {
   rows: CandidateRow[];
@@ -87,12 +90,13 @@ export function CandidateList({
                   width: 60,
                   height: 60,
                   flex: 'none',
-                  borderRadius: token.borderRadiusLG,
-                  background: candidate.isValid ? token.colorFillQuaternary : token.colorErrorBg,
+                  borderRadius: 10,
+                  border: `1px solid ${DARK_COLOR.cardBorder}`,
+                  background: candidate.isValid ? (candidate.isMulticolor ? colors(candidate).surface : DARK_COLOR.card) : token.colorErrorBg,
                 }}
               >
                 {candidate.svg ? (
-                  <img src={toSvgDataUri(candidate.svg, token.colorText)} width={PREVIEW_SIZE} height={PREVIEW_SIZE} alt={`Xem trước ${slug}`} />
+                  <img src={toSvgDataUri(candidate.svg, colors(candidate).icon)} width={PREVIEW_SIZE} height={PREVIEW_SIZE} alt={`Xem trước ${slug}`} />
                 ) : (
                   <Typography.Text type="danger">!</Typography.Text>
                 )}

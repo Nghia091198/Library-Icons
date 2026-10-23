@@ -15,7 +15,7 @@ import {
 import { toSvgDataUri } from '@/client/common/svgFiles';
 import { useCopyToClipboard } from '@/client/common/useCopyToClipboard';
 import { useMessage } from '@/client/common/MessageProvider';
-import { GALLERY_COLOR, previewColors } from '@/client/gallery/galleryTheme';
+import { DARK_COLOR, previewColors } from '@/client/common/darkTheme';
 import type { PublicIconDto } from '@/shared/types/icons';
 
 const CODE_FORMAT = { svg: 'SVG', react: 'React', dataUrl: 'Data URL' } as const;
@@ -70,7 +70,7 @@ export function IconPreviewModal({ icon, setName, categoryName, onClose }: IconP
       width={720}
       title={null}
       destroyOnClose
-      styles={{ content: { background: GALLERY_COLOR.card, border: `1px solid ${GALLERY_COLOR.cardBorder}` } }}
+      styles={{ content: { background: DARK_COLOR.card, border: `1px solid ${DARK_COLOR.cardBorder}` } }}
     >
       <Flex vertical gap={20}>
         <Flex gap={24} wrap align="flex-start">
@@ -82,7 +82,7 @@ export function IconPreviewModal({ icon, setName, categoryName, onClose }: IconP
               height: 136,
               flex: 'none',
               borderRadius: token.borderRadiusLG,
-              border: `1px solid ${GALLERY_COLOR.cardBorder}`,
+              border: `1px solid ${DARK_COLOR.cardBorder}`,
               background: preview.surface,
             }}
           >
@@ -108,7 +108,7 @@ export function IconPreviewModal({ icon, setName, categoryName, onClose }: IconP
           </Flex>
         </Flex>
 
-        <Flex wrap align="center" gap={12} style={{ borderTop: `1px solid ${GALLERY_COLOR.cardBorder}`, paddingTop: 20 }}>
+        <Flex wrap align="center" gap={12} style={{ borderTop: `1px solid ${DARK_COLOR.cardBorder}`, paddingTop: 20 }}>
           <ColorPicker
             allowClear
             value={color}
@@ -149,8 +149,8 @@ export function IconPreviewModal({ icon, setName, categoryName, onClose }: IconP
                 maxHeight: 220,
                 overflow: 'auto',
                 borderRadius: token.borderRadiusLG,
-                border: `1px solid ${GALLERY_COLOR.cardBorder}`,
-                background: GALLERY_COLOR.background,
+                border: `1px solid ${DARK_COLOR.cardBorder}`,
+                background: DARK_COLOR.background,
                 fontFamily: MONOSPACE,
                 fontSize: 12.5,
                 lineHeight: 1.6,

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CLIENT_ROUTE } from '@/client/common/clientRoutes';
 import { scrollToSection } from '@/client/common/useActiveSection';
 import { CodeBlock } from '@/client/gallery/CodeBlock';
-import { GALLERY_COLOR } from '@/client/gallery/galleryTheme';
+import { DARK_COLOR } from '@/client/common/darkTheme';
 import { GUIDE_SECTION, GUIDE_SECTIONS, type GuideSection } from '@/client/gallery/guideSections';
 import { API_ROUTE } from '@/shared/constants/apiRoutes';
 
@@ -68,8 +68,8 @@ function Step({ section, children }: StepProps) {
         gap: 16,
         padding: 24,
         borderRadius: 14,
-        border: `1px solid ${GALLERY_COLOR.border}`,
-        background: GALLERY_COLOR.surface,
+        border: `1px solid ${DARK_COLOR.border}`,
+        background: DARK_COLOR.surface,
         scrollMarginTop: SECTION_SCROLL_MARGIN,
       }}
     >
@@ -83,9 +83,9 @@ function Step({ section, children }: StepProps) {
           alignItems: 'center',
           justifyContent: 'center',
           fontWeight: 700,
-          color: GALLERY_COLOR.link,
-          background: GALLERY_COLOR.surfaceRaised,
-          border: `1px solid ${GALLERY_COLOR.border}`,
+          color: DARK_COLOR.link,
+          background: DARK_COLOR.surfaceRaised,
+          border: `1px solid ${DARK_COLOR.border}`,
         }}
       >
         {index}
@@ -101,7 +101,7 @@ function Step({ section, children }: StepProps) {
 }
 
 function Muted({ children }: { children: ReactNode }) {
-  return <Typography.Paragraph style={{ margin: 0, color: GALLERY_COLOR.textMuted }}>{children}</Typography.Paragraph>;
+  return <Typography.Paragraph style={{ margin: 0, color: DARK_COLOR.textMuted }}>{children}</Typography.Paragraph>;
 }
 
 export function GuidePage() {

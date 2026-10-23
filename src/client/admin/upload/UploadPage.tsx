@@ -1,18 +1,32 @@
-import { Button, Card, Col, Flex, Row, Spin, Typography, theme } from 'antd';
+import { ArrowRightOutlined } from '@ant-design/icons';
+import { Alert, Button, Card, Flex, Grid, Spin, Typography } from 'antd';
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAdminSets, useRefreshAdminIconLists, useRefreshAdminSummaries } from '@/client/admin/icons/adminData';
 import { createIcons } from '@/client/admin/icons/iconAdminService';
-import { API_ERROR_TEXT, describeApiError } from '@/client/admin/icons/iconTexts';
-import { useIconSets } from '@/client/admin/icons/useIcons';
+import { API_ERROR_TEXT, describeApiError, ICON_STATUS_LABEL } from '@/client/admin/icons/iconTexts';
+import { ADMIN_FILTER_PARAM } from '@/client/admin/icons/useAdminFilters';
 import { CandidateList } from '@/client/admin/upload/CandidateList';
 import { SourceInput } from '@/client/admin/upload/SourceInput';
 import { toCandidateRows, useCandidateSelection, type CandidateRow } from '@/client/admin/upload/useCandidateSelection';
 import { useIconPreview } from '@/client/admin/upload/useIconPreview';
+import { APP_HEADER_HEIGHT } from '@/client/common/AppShell';
+import { CLIENT_ROUTE } from '@/client/common/clientRoutes';
+import { FloatingBar, FLOATING_BAR_CLEARANCE } from '@/client/common/FloatingBar';
 import { useMessage } from '@/client/common/MessageProvider';
 import { useDebouncedValue } from '@/client/common/useDebouncedValue';
 import { ICON_STATUS, type CreatableIconStatus } from '@/shared/constants/icons';
 import type { IconSetDto, PreviewSourceInput, SvgSourceInput } from '@/shared/types/icons';
 
 const PREVIEW_DEBOUNCE_MS = 400;
+const COLUMN_GAP = 16;
+// Cột nguồn dính theo khi cuộn danh sách icon dài, ngay dưới header cố định.
+const STICKY_TOP = APP_HEADER_HEIGHT + 24;
+
+interface SavedBatch {
+  count: number;
+  status: CreatableIconStatus;
+}
 
 function overridesForSource(overrides: Record<string, string>, sourceIndex: number): Record<string, string> | undefined {
   const prefix = `${sourceIndex}:`;
@@ -32,15 +46,21 @@ function summarizeBySet(rows: CandidateRow[], sets: IconSetDto[]): string {
 }
 
 export function UploadPage() {
-  const { token } = theme.useToken();
+  const navigate = useNavigate();
   const message = useMessage();
-  const { sets } = useIconSets();
+  const screens = Grid.useBreakpoint();
+  const isWide = screens.xl === true;
+  const { sets } = useAdminSets();
+  const refreshSummaries = useRefreshAdminSummaries();
+  const refreshIconLists = useRefreshAdminIconLists();
+
   const [text, setText] = useState('');
   const [files, setFiles] = useState<SvgSourceInput[]>([]);
   const [setOverrides, setSetOverrides] = useState<Record<string, string>>({});
   const [refreshKey, setRefreshKey] = useState(0);
   const [saveErrors, setSaveErrors] = useState<Record<string, string>>({});
   const [savingStatus, setSavingStatus] = useState<CreatableIconStatus | null>(null);
+  const [lastSaved, setLastSaved] = useState<SavedBatch | null>(null);
 
   const sources = useMemo<PreviewSourceInput[]>(() => {
     const plain: SvgSourceInput[] = [...(text.trim() ? [{ text }] : []), ...files];
@@ -83,12 +103,17 @@ export function UploadPage() {
         else failures[row.key] = API_ERROR_TEXT[result.error.code] ?? result.error.message;
       }
 
-      if (savedCount > 0) void message.success(`Đã lưu ${savedCount} icon`);
+      if (savedCount > 0) {
+        setLastSaved({ count: savedCount, status });
+        refreshSummaries();
+        refreshIconLists();
+      }
       if (Object.keys(failures).length === 0) {
         clearSources();
       } else {
         setSaveErrors(failures);
         setRefreshKey((key) => key + 1);
+        void message.warning(`${Object.keys(failures).length} icon chưa lưu được, xem lý do ở từng dòng`);
       }
     } catch (error) {
       void message.error(describeApiError(error));
@@ -100,11 +125,12 @@ export function UploadPage() {
   const selectedCount = selection.selectedRows.length;
   const canSave = selectedCount > 0 && !selection.hasInvalidSlug && savingStatus === null;
   const validCount = rows.filter((row) => row.candidate.isValid).length;
+  const hasRows = rows.length > 0;
 
   return (
-    <Flex vertical gap={16} style={{ minHeight: '100%' }}>
+    <Flex vertical gap={16} style={{ paddingBottom: hasRows ? FLOATING_BAR_CLEARANCE : 0 }}>
       <div>
-        <Typography.Title level={4} style={{ margin: 0 }}>
+        <Typography.Title level={1} style={{ margin: 0, fontSize: 24 }}>
           Upload icon
         </Typography.Title>
         <Typography.Text type="secondary">
@@ -112,80 +138,107 @@ export function UploadPage() {
         </Typography.Text>
       </div>
 
-      <Row gutter={[16, 16]} align="top">
-        <Col xs={24} xl={12}>
-          <Card title="Nguồn">
-            <SourceInput
-              text={text}
-              files={files}
-              onTextChange={setText}
-              onAddFiles={(added) => setFiles((current) => [...current, ...added])}
-              onRemoveFile={(index) => {
-                setFiles((current) => current.filter((_file, position) => position !== index));
-                setSetOverrides({});
-              }}
-              onClear={clearSources}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} xl={12}>
-          <Card
-            title={rows.length > 0 ? `Phát hiện ${rows.length} icon` : 'Kết quả'}
-            extra={rows.length > 0 && <Typography.Text type="secondary">{validCount} hợp lệ · {rows.length - validCount} lỗi</Typography.Text>}
-          >
-            {preview.error && <Typography.Text type="danger">{preview.error}</Typography.Text>}
-            <Spin spinning={preview.loading}>
-              <CandidateList
-                rows={rows}
-                sets={sets}
-                choices={selection.choices}
-                saveErrors={saveErrors}
-                sourceIssues={sourceIssues}
-                onToggle={selection.toggle}
-                onSlugChange={selection.setSlug}
-                onSetChange={(key, setId) => setSetOverrides((current) => ({ ...current, [key]: setId }))}
-              />
-            </Spin>
-          </Card>
-        </Col>
-      </Row>
+      {lastSaved && (
+        <Alert
+          type="success"
+          showIcon
+          closable
+          onClose={() => setLastSaved(null)}
+          message={`Đã lưu ${lastSaved.count.toLocaleString('en-US')} icon (${ICON_STATUS_LABEL[lastSaved.status].toLowerCase()})`}
+          action={
+            <Button
+              size="small"
+              icon={<ArrowRightOutlined />}
+              iconPosition="end"
+              onClick={() => navigate(`${CLIENT_ROUTE.adminIcons}?${ADMIN_FILTER_PARAM.status}=${lastSaved.status}`)}
+            >
+              Xem trong Quản lý
+            </Button>
+          }
+        />
+      )}
 
-      <Flex
-        wrap
-        align="center"
-        gap={12}
+      <div
         style={{
-          position: 'sticky',
-          bottom: 0,
-          marginTop: 'auto',
-          padding: '12px 24px',
-          background: token.colorBgContainer,
-          borderTop: `1px solid ${token.colorBorderSecondary}`,
-          borderRadius: token.borderRadiusLG,
+          display: 'grid',
+          gridTemplateColumns: isWide ? 'minmax(0, 1fr) minmax(0, 1fr)' : 'minmax(0, 1fr)',
+          gap: COLUMN_GAP,
+          alignItems: 'start',
         }}
       >
-        <Typography.Text type="secondary">
-          {selectedCount > 0
-            ? `Sẽ lưu ${selectedCount} icon: ${summarizeBySet(selection.selectedRows, sets)}`
-            : 'Chưa chọn icon nào'}
-        </Typography.Text>
-        <Button
-          style={{ marginLeft: 'auto' }}
-          disabled={!canSave}
-          loading={savingStatus === ICON_STATUS.draft}
-          onClick={() => void save(ICON_STATUS.draft)}
+        <Card title="Nguồn" style={isWide ? { position: 'sticky', top: STICKY_TOP } : undefined}>
+          <SourceInput
+            text={text}
+            files={files}
+            onTextChange={setText}
+            onAddFiles={(added) => setFiles((current) => [...current, ...added])}
+            onRemoveFile={(index) => {
+              setFiles((current) => current.filter((_file, position) => position !== index));
+              setSetOverrides({});
+            }}
+            onClear={clearSources}
+          />
+        </Card>
+
+        <Card
+          title={hasRows ? `Phát hiện ${rows.length.toLocaleString('en-US')} icon` : 'Kết quả'}
+          extra={
+            hasRows && (
+              <Typography.Text type="secondary">
+                {validCount} hợp lệ · {rows.length - validCount} lỗi
+              </Typography.Text>
+            )
+          }
         >
-          Lưu nháp
-        </Button>
-        <Button
-          type="primary"
-          disabled={!canSave}
-          loading={savingStatus === ICON_STATUS.published}
-          onClick={() => void save(ICON_STATUS.published)}
-        >
-          Lưu và publish
-        </Button>
-      </Flex>
+          {preview.error && <Typography.Text type="danger">{preview.error}</Typography.Text>}
+          <Spin spinning={preview.loading}>
+            <CandidateList
+              rows={rows}
+              sets={sets}
+              choices={selection.choices}
+              saveErrors={saveErrors}
+              sourceIssues={sourceIssues}
+              onToggle={selection.toggle}
+              onSlugChange={selection.setSlug}
+              onSetChange={(key, setId) => setSetOverrides((current) => ({ ...current, [key]: setId }))}
+            />
+          </Spin>
+        </Card>
+      </div>
+
+      {hasRows && (
+        <FloatingBar label="Lưu các icon đã chọn">
+          <Flex wrap align="center" gap={12}>
+            <Typography.Text style={{ padding: '0 4px' }}>
+              {selectedCount > 0 ? (
+                <>
+                  <Typography.Text strong>Sẽ lưu {selectedCount.toLocaleString('en-US')} icon</Typography.Text>
+                  <Typography.Text type="secondary"> · {summarizeBySet(selection.selectedRows, sets)}</Typography.Text>
+                </>
+              ) : (
+                <Typography.Text type="secondary">Chưa chọn icon nào</Typography.Text>
+              )}
+            </Typography.Text>
+            <Button
+              size="small"
+              disabled={!canSave}
+              loading={savingStatus === ICON_STATUS.draft}
+              onClick={() => void save(ICON_STATUS.draft)}
+            >
+              Lưu nháp
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              disabled={!canSave}
+              loading={savingStatus === ICON_STATUS.published}
+              onClick={() => void save(ICON_STATUS.published)}
+            >
+              Lưu và publish
+            </Button>
+          </Flex>
+        </FloatingBar>
+      )}
     </Flex>
   );
 }
