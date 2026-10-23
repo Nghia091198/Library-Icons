@@ -56,6 +56,20 @@ export const ICON_LIST_PAGE_SIZE = {
 export const CREATABLE_ICON_STATUSES = [ICON_STATUS.draft, ICON_STATUS.published] as const;
 export type CreatableIconStatus = (typeof CREATABLE_ICON_STATUSES)[number];
 
+export const BULK_ICON_ACTION = {
+  publish: 'publish',
+  archive: 'archive',
+  restore: 'restore',
+  delete: 'delete',
+  setCategory: 'setCategory',
+} as const;
+
+export type BulkIconAction = (typeof BULK_ICON_ACTION)[keyof typeof BULK_ICON_ACTION];
+
+// Mỗi lần gọi bị giới hạn để chạy xong trong thời gian tối đa của một request serverless;
+// giao diện tự chia danh sách lớn thành nhiều lô.
+export const BULK_ICON_LIMIT = 100;
+
 export const SVG_ISSUE_SEVERITY = {
   info: 'info',
   warning: 'warning',

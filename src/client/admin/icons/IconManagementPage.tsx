@@ -1,8 +1,10 @@
-import { CheckCircleOutlined, CloudUploadOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CheckSquareOutlined, CloudUploadOutlined } from '@ant-design/icons';
 import { Alert, Button, Empty, Flex, Grid, Input, Popconfirm, Typography } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSWRConfig } from 'swr';
 import {
+  adminIconUrl,
   useAdminCategories,
   useAdminIconPages,
   useAdminSets,
@@ -10,16 +12,18 @@ import {
   type AdminIconFilters,
 } from '@/client/admin/icons/adminData';
 import { ADMIN_GRID_STYLE, AdminIconTile, AdminIconTileSkeletons } from '@/client/admin/icons/AdminIconTile';
-import { publishDrafts } from '@/client/admin/icons/iconAdminService';
+import { BulkActionBar } from '@/client/admin/icons/BulkActionBar';
+import { publishDrafts, runBulkIconAction } from '@/client/admin/icons/iconAdminService';
 import { IconDetailPanel } from '@/client/admin/icons/IconDetailPanel';
 import { describeApiError, ICON_STATUS_LABEL } from '@/client/admin/icons/iconTexts';
 import { useAdminFilters } from '@/client/admin/icons/useAdminFilters';
+import { useIconSelection } from '@/client/admin/icons/useIconSelection';
 import { APP_HEADER_HEIGHT } from '@/client/common/AppShell';
 import { CLIENT_ROUTE } from '@/client/common/clientRoutes';
 import { useMessage } from '@/client/common/MessageProvider';
 import { SEARCH_DEBOUNCE_MS, useDebouncedValue } from '@/client/common/useDebouncedValue';
 import { useInfiniteScroll } from '@/client/common/useInfiniteScroll';
-import { ICON_STATUS } from '@/shared/constants/icons';
+import { BULK_ICON_ACTION, ICON_STATUS, type BulkIconAction } from '@/shared/constants/icons';
 import type { IconDetailDto, IconSummaryDto } from '@/shared/types/icons';
 
 const DETAIL_COLUMN_WIDTH = 400;
@@ -28,6 +32,16 @@ const FIRST_LOAD_SKELETONS = 40;
 const LOAD_MORE_SKELETONS = 16;
 // Khoảng cách từ đáy header tới cột chi tiết khi cột này dính theo khi cuộn.
 const STICKY_TOP = APP_HEADER_HEIGHT + 24;
+// Chừa chỗ để thanh thao tác hàng loạt (nổi ở đáy) không che hàng icon cuối.
+const BULK_BAR_CLEARANCE = 96;
+
+const BULK_ACTION_DONE_LABEL: Record<BulkIconAction, string> = {
+  [BULK_ICON_ACTION.publish]: 'Đã publish',
+  [BULK_ICON_ACTION.archive]: 'Đã lưu trữ',
+  [BULK_ICON_ACTION.restore]: 'Đã khôi phục',
+  [BULK_ICON_ACTION.delete]: 'Đã xoá',
+  [BULK_ICON_ACTION.setCategory]: 'Đã đổi nhóm cho',
+};
 
 function matchesFilters(icon: IconSummaryDto, filters: AdminIconFilters): boolean {
   return (
@@ -40,6 +54,7 @@ function matchesFilters(icon: IconSummaryDto, filters: AdminIconFilters): boolea
 export function IconManagementPage() {
   const navigate = useNavigate();
   const message = useMessage();
+  const { mutate: mutateCache } = useSWRConfig();
   const screens = Grid.useBreakpoint();
   const isWide = screens.xl === true;
 
@@ -47,10 +62,31 @@ export function IconManagementPage() {
   const [searchText, setSearchText] = useState(filters.q ?? '');
   const debouncedSearch = useDebouncedValue(searchText.trim(), SEARCH_DEBOUNCE_MS);
   const [isPublishing, setPublishing] = useState(false);
+  const [isSelectionMode, setSelectionMode] = useState(false);
+  const [busyBulkAction, setBusyBulkAction] = useState<BulkIconAction | null>(null);
+  const selection = useIconSelection();
 
   useEffect(() => {
     if (debouncedSearch !== (filters.q ?? '')) setQuery(debouncedSearch);
   }, [debouncedSearch, filters.q, setQuery]);
+
+  // Đổi bộ lọc thì bỏ danh sách đã chọn, tránh thao tác lên icon không còn nhìn thấy.
+  const { clear: clearSelection } = selection;
+  useEffect(() => clearSelection(), [filters, clearSelection]);
+
+  const exitSelectionMode = useCallback(() => {
+    setSelectionMode(false);
+    clearSelection();
+  }, [clearSelection]);
+
+  useEffect(() => {
+    if (!isSelectionMode) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') exitSelectionMode();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isSelectionMode, exitSelectionMode]);
 
   const { sets } = useAdminSets();
   const { categories } = useAdminCategories();
@@ -60,6 +96,42 @@ export function IconManagementPage() {
     icons.loadMore,
     icons.hasMore && !icons.isLoadingMore && icons.error === undefined,
   );
+
+  // Giữ thứ tự icon trong ref để hàm bấm icon không đổi mỗi lần render (thẻ icon dùng memo).
+  const orderedIdsRef = useRef<string[]>([]);
+  orderedIdsRef.current = icons.items.map((icon) => icon.id);
+  const { toggle: toggleSelection } = selection;
+  const handleTileSelect = useCallback(
+    (iconId: string, withRange: boolean) => {
+      if (isSelectionMode) toggleSelection(iconId, withRange, orderedIdsRef.current);
+      else selectIcon(iconId);
+    },
+    [isSelectionMode, toggleSelection, selectIcon],
+  );
+
+  async function runBulk(action: BulkIconAction, categoryId?: string | null) {
+    const ids = [...selection.selectedIds];
+    setBusyBulkAction(action);
+    try {
+      const result = await runBulkIconAction(ids, action, categoryId);
+      const skipped = result.failed.length > 0 ? ` · bỏ qua ${result.failed.length} (${result.failed[0]?.message})` : '';
+      const text = `${BULK_ACTION_DONE_LABEL[action]} ${result.succeeded.toLocaleString('en-US')} icon${skipped}`;
+      if (result.failed.length > 0) void message.warning(text, 6);
+      else void message.success(text);
+
+      if (selectedIconId && ids.includes(selectedIconId)) {
+        if (action === BULK_ICON_ACTION.delete) selectIcon(null);
+        else void mutateCache(adminIconUrl(selectedIconId));
+      }
+      clearSelection();
+      icons.reload();
+      refreshSummaries();
+    } catch (error) {
+      void message.error(describeApiError(error));
+    } finally {
+      setBusyBulkAction(null);
+    }
+  }
 
   const title = [
     filters.status ? ICON_STATUS_LABEL[filters.status] : 'Tất cả icon',
@@ -103,7 +175,7 @@ export function IconManagementPage() {
   }
 
   return (
-    <Flex vertical gap={16}>
+    <Flex vertical gap={16} style={{ paddingBottom: isSelectionMode ? BULK_BAR_CLEARANCE : 0 }}>
       <Flex wrap align="flex-end" gap={16}>
         <div style={{ flex: '1 1 260px', minWidth: 0 }}>
           <Typography.Title level={1} style={{ margin: 0, fontSize: 24 }}>
@@ -122,6 +194,15 @@ export function IconManagementPage() {
           onSearch={setSearchText}
           style={{ flex: '0 1 320px' }}
         />
+        <Button
+          icon={<CheckSquareOutlined />}
+          type={isSelectionMode ? 'primary' : 'default'}
+          ghost={isSelectionMode}
+          aria-pressed={isSelectionMode}
+          onClick={() => (isSelectionMode ? exitSelectionMode() : setSelectionMode(true))}
+        >
+          Chọn nhiều
+        </Button>
         <Button type="primary" icon={<CloudUploadOutlined />} onClick={() => navigate(CLIENT_ROUTE.adminUpload)}>
           Upload
         </Button>
@@ -177,7 +258,14 @@ export function IconManagementPage() {
                 <AdminIconTileSkeletons count={FIRST_LOAD_SKELETONS} />
               ) : (
                 icons.items.map((icon) => (
-                  <AdminIconTile key={icon.id} icon={icon} isSelected={icon.id === selectedIconId} onSelect={selectIcon} />
+                  <AdminIconTile
+                    key={icon.id}
+                    icon={icon}
+                    isSelected={icon.id === selectedIconId}
+                    selectionMode={isSelectionMode}
+                    isChecked={selection.selectedIds.has(icon.id)}
+                    onSelect={handleTileSelect}
+                  />
                 ))
               )}
               {icons.isLoadingMore && <AdminIconTileSkeletons count={LOAD_MORE_SKELETONS} />}
@@ -213,6 +301,19 @@ export function IconManagementPage() {
           </aside>
         )}
       </div>
+
+      {isSelectionMode && (
+        <BulkActionBar
+          selectedCount={selection.selectedIds.size}
+          visibleCount={icons.items.length}
+          categories={categories}
+          busyAction={busyBulkAction}
+          onAction={(action, categoryId) => void runBulk(action, categoryId)}
+          onSelectAllVisible={() => selection.selectAll(orderedIdsRef.current)}
+          onClear={clearSelection}
+          onExit={exitSelectionMode}
+        />
+      )}
     </Flex>
   );
 }

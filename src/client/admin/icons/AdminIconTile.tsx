@@ -19,22 +19,60 @@ export const ADMIN_GRID_STYLE = {
 interface AdminIconTileProps {
   icon: IconSummaryDto;
   isSelected: boolean;
-  onSelect: (iconId: string) => void;
+  // Chế độ chọn nhiều: hiện ô tick; isChecked = icon nằm trong danh sách đã chọn.
+  selectionMode?: boolean;
+  isChecked?: boolean;
+  onSelect: (iconId: string, withRange: boolean) => void;
 }
 
-// memo: lưới có thể tới hàng nghìn thẻ; chọn một icon chỉ vẽ lại hai thẻ đổi trạng thái chọn.
-export const AdminIconTile = memo(function AdminIconTile({ icon, isSelected, onSelect }: AdminIconTileProps) {
+function CheckMark({ isChecked }: { isChecked: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        top: 6,
+        right: 6,
+        width: 18,
+        height: 18,
+        borderRadius: 5,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: `1.5px solid ${isChecked ? DARK_COLOR.primary : DARK_COLOR.textMuted}`,
+        background: isChecked ? DARK_COLOR.primary : 'transparent',
+        color: '#ffffff',
+      }}
+    >
+      {isChecked && (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12l5 5L20 7" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
+// memo: lưới có thể tới hàng nghìn thẻ; chọn một icon chỉ vẽ lại các thẻ đổi trạng thái chọn.
+export const AdminIconTile = memo(function AdminIconTile({
+  icon,
+  isSelected,
+  selectionMode = false,
+  isChecked = false,
+  onSelect,
+}: AdminIconTileProps) {
   const [isHovered, setHovered] = useState(false);
   const colors = previewColors(icon.isMulticolor);
-  const borderColor = isSelected ? DARK_COLOR.primary : isHovered ? DARK_COLOR.border : DARK_COLOR.cardBorder;
+  const isHighlighted = selectionMode ? isChecked : isSelected;
+  const borderColor = isHighlighted ? DARK_COLOR.primary : isHovered ? DARK_COLOR.border : DARK_COLOR.cardBorder;
 
   return (
     <Flex vertical gap={6} style={{ minWidth: 0 }}>
       <button
         type="button"
-        aria-pressed={isSelected}
+        aria-pressed={selectionMode ? isChecked : isSelected}
         aria-label={`${icon.name} (${ICON_STATUS_LABEL[icon.status]})`}
-        onClick={() => onSelect(icon.id)}
+        onClick={(event) => onSelect(icon.id, event.shiftKey)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
@@ -46,7 +84,7 @@ export const AdminIconTile = memo(function AdminIconTile({ icon, isSelected, onS
           padding: 0,
           borderRadius: 10,
           border: `1px solid ${borderColor}`,
-          boxShadow: isSelected ? `0 0 0 3px ${DARK_COLOR.primary}55` : 'none',
+          boxShadow: isHighlighted ? `0 0 0 3px ${DARK_COLOR.primary}55` : 'none',
           background: DARK_COLOR.card,
           cursor: 'pointer',
           transition: 'border-color 0.15s, box-shadow 0.15s',
@@ -55,6 +93,7 @@ export const AdminIconTile = memo(function AdminIconTile({ icon, isSelected, onS
         <span style={{ position: 'absolute', top: 8, left: 8, display: 'flex' }}>
           <StatusDot status={icon.status} />
         </span>
+        {selectionMode && <CheckMark isChecked={isChecked} />}
         <span
           style={{
             display: 'flex',
@@ -71,7 +110,7 @@ export const AdminIconTile = memo(function AdminIconTile({ icon, isSelected, onS
       </button>
       <Typography.Text
         ellipsis={{ tooltip: icon.slug }}
-        style={{ fontSize: 12, fontFamily: MONOSPACE, color: isSelected ? DARK_COLOR.text : DARK_COLOR.textMuted, textAlign: 'center' }}
+        style={{ fontSize: 12, fontFamily: MONOSPACE, color: isHighlighted ? DARK_COLOR.text : DARK_COLOR.textMuted, textAlign: 'center' }}
       >
         {icon.slug}
       </Typography.Text>

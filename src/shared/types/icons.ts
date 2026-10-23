@@ -1,5 +1,6 @@
 import type { ErrorCode } from '@/shared/constants/errorCodes';
 import type {
+  BulkIconAction,
   CreatableIconStatus,
   IconSetStyle,
   IconStatus,
@@ -100,6 +101,18 @@ export interface AdminIconStatsResponse {
   total: number;
   byStatus: Record<IconStatus, number>;
   bySet: Array<{ setId: string; count: number }>;
+}
+
+export interface BulkIconRequest {
+  ids: string[];
+  action: BulkIconAction;
+  // Chỉ dùng với action setCategory; null = bỏ nhóm.
+  categoryId?: string | null;
+}
+
+export interface BulkIconResponse {
+  succeeded: number;
+  failed: Array<{ id: string; code: ErrorCode; message: string }>;
 }
 
 export interface PublishDraftsResponse {

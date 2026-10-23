@@ -1,7 +1,9 @@
 import { api } from '@/client/common/apiClient';
 import { API_ROUTE, API_ROUTE_TEMPLATE, fillRoute } from '@/shared/constants/apiRoutes';
-import type { IconStatus } from '@/shared/constants/icons';
+import { BULK_ICON_LIMIT, type BulkIconAction, type IconStatus } from '@/shared/constants/icons';
 import type {
+  BulkIconRequest,
+  BulkIconResponse,
   CreateIconsRequest,
   CreateIconsResponse,
   IconCategoryListResponse,
@@ -86,4 +88,20 @@ export function createIcons(body: CreateIconsRequest): Promise<CreateIconsRespon
 
 export function publishDrafts(body: PublishDraftsRequest): Promise<PublishDraftsResponse> {
   return api.post<PublishDraftsResponse>(API_ROUTE.adminIconsPublishDrafts, body);
+}
+
+// Chia danh sách thành các lô theo giới hạn của server rồi gộp kết quả; chạy tuần tự để không dồn tải.
+export async function runBulkIconAction(
+  ids: string[],
+  action: BulkIconAction,
+  categoryId?: string | null,
+): Promise<BulkIconResponse> {
+  const total: BulkIconResponse = { succeeded: 0, failed: [] };
+  for (let start = 0; start < ids.length; start += BULK_ICON_LIMIT) {
+    const body: BulkIconRequest = { ids: ids.slice(start, start + BULK_ICON_LIMIT), action, categoryId };
+    const result = await api.post<BulkIconResponse>(API_ROUTE.adminIconsBulk, body);
+    total.succeeded += result.succeeded;
+    total.failed.push(...result.failed);
+  }
+  return total;
 }
