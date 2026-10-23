@@ -1,6 +1,6 @@
 import { CheckCircleOutlined, CloseOutlined, DeleteOutlined, InboxOutlined, UndoOutlined } from '@ant-design/icons';
 import { Button, Divider, Flex, Popconfirm, Select, Typography } from 'antd';
-import { DARK_COLOR } from '@/client/common/darkTheme';
+import { FloatingBar } from '@/client/common/FloatingBar';
 import { BULK_ICON_ACTION, type BulkIconAction } from '@/shared/constants/icons';
 import type { IconCategoryDto } from '@/shared/types/icons';
 
@@ -33,24 +33,7 @@ export function BulkActionBar({
   const countText = selectedCount.toLocaleString('en-US');
 
   return (
-    <div
-      role="toolbar"
-      aria-label="Thao tác với các icon đã chọn"
-      style={{
-        position: 'fixed',
-        left: '50%',
-        bottom: 24,
-        transform: 'translateX(-50%)',
-        zIndex: 20,
-        width: 'max-content',
-        maxWidth: 'calc(100vw - 32px)',
-        padding: '10px 12px',
-        borderRadius: 14,
-        border: `1px solid ${DARK_COLOR.border}`,
-        background: DARK_COLOR.surfaceRaised,
-        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.45)',
-      }}
-    >
+    <FloatingBar label="Thao tác với các icon đã chọn">
       <Flex wrap align="center" gap={8}>
         <Typography.Text strong aria-live="polite" style={{ padding: '0 4px', minWidth: 96 }}>
           Đã chọn {countText}
@@ -129,6 +112,6 @@ export function BulkActionBar({
 
         <Button size="small" type="text" icon={<CloseOutlined />} aria-label="Thoát chế độ chọn nhiều" onClick={onExit} disabled={isBusy} />
       </Flex>
-    </div>
+    </FloatingBar>
   );
 }

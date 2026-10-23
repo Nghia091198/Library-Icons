@@ -20,6 +20,7 @@ import { useAdminFilters } from '@/client/admin/icons/useAdminFilters';
 import { useIconSelection } from '@/client/admin/icons/useIconSelection';
 import { APP_HEADER_HEIGHT } from '@/client/common/AppShell';
 import { CLIENT_ROUTE } from '@/client/common/clientRoutes';
+import { FLOATING_BAR_CLEARANCE } from '@/client/common/FloatingBar';
 import { useMessage } from '@/client/common/MessageProvider';
 import { SEARCH_DEBOUNCE_MS, useDebouncedValue } from '@/client/common/useDebouncedValue';
 import { useInfiniteScroll } from '@/client/common/useInfiniteScroll';
@@ -32,8 +33,6 @@ const FIRST_LOAD_SKELETONS = 40;
 const LOAD_MORE_SKELETONS = 16;
 // Khoảng cách từ đáy header tới cột chi tiết khi cột này dính theo khi cuộn.
 const STICKY_TOP = APP_HEADER_HEIGHT + 24;
-// Chừa chỗ để thanh thao tác hàng loạt (nổi ở đáy) không che hàng icon cuối.
-const BULK_BAR_CLEARANCE = 96;
 
 const BULK_ACTION_DONE_LABEL: Record<BulkIconAction, string> = {
   [BULK_ICON_ACTION.publish]: 'Đã publish',
@@ -175,7 +174,7 @@ export function IconManagementPage() {
   }
 
   return (
-    <Flex vertical gap={16} style={{ paddingBottom: isSelectionMode ? BULK_BAR_CLEARANCE : 0 }}>
+    <Flex vertical gap={16} style={{ paddingBottom: isSelectionMode ? FLOATING_BAR_CLEARANCE : 0 }}>
       <Flex wrap align="flex-end" gap={16}>
         <div style={{ flex: '1 1 260px', minWidth: 0 }}>
           <Typography.Title level={1} style={{ margin: 0, fontSize: 24 }}>

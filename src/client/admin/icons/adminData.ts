@@ -124,3 +124,12 @@ export function useRefreshAdminSummaries() {
     for (const key of SUMMARY_KEYS) void mutate(key);
   }, [mutate]);
 }
+
+// Sau khi upload: đánh dấu mọi danh sách icon đã cache là cũ, để quay sang màn Quản lý thấy ngay icon mới.
+// Khoá của useSWRInfinite có tiền tố riêng nên lọc theo "chứa đường dẫn API" thay vì so khớp đầu chuỗi.
+export function useRefreshAdminIconLists() {
+  const { mutate } = useSWRConfig();
+  return useCallback(() => {
+    void mutate((key) => typeof key === 'string' && key.includes(`${API_ROUTE.adminIcons}?`));
+  }, [mutate]);
+}

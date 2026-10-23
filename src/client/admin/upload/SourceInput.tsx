@@ -1,6 +1,7 @@
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Flex, Input, Tag, theme, Typography, Upload } from 'antd';
 import { useState, type DragEvent } from 'react';
+import { DARK_COLOR } from '@/client/common/darkTheme';
 import { useMessage } from '@/client/common/MessageProvider';
 import { isSvgFile, readSvgFile } from '@/client/common/svgFiles';
 import type { SvgSourceInput } from '@/shared/types/icons';
@@ -61,7 +62,8 @@ export function SourceInput({ text, files, onTextChange, onAddFiles, onRemoveFil
           style={{
             fontFamily: MONOSPACE,
             fontSize: 12.5,
-            background: isDragging ? token.colorPrimaryBg : token.colorFillQuaternary,
+            background: isDragging ? token.colorPrimaryBg : DARK_COLOR.card,
+            borderColor: isDragging ? token.colorPrimary : DARK_COLOR.cardBorder,
           }}
         />
       </div>
