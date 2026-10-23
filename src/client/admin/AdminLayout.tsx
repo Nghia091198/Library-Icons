@@ -37,7 +37,17 @@ function AdminShell() {
     case ADMIN_SESSION_STATUS.failed:
       return (
         <CenteredState>
-          <Alert type="error" showIcon message="Không xác minh được phiên đăng nhập" description={session.message} />
+          <Alert
+            type="error"
+            showIcon
+            message="Không xác minh được phiên đăng nhập"
+            description={`${session.message}. Nếu server vừa khởi động lại, đợi vài giây rồi thử lại.`}
+            action={
+              <Button size="small" onClick={() => window.location.reload()}>
+                Thử lại
+              </Button>
+            }
+          />
         </CenteredState>
       );
     case ADMIN_SESSION_STATUS.ready: {
