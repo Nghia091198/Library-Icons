@@ -76,9 +76,15 @@ export interface McpGetIconsResult {
 interface CatalogDeps {
   service: IconService;
   repository: IconRepository;
+  now?: () => number;
 }
 
-export function createIconCatalog({ service, repository }: CatalogDeps) {
+// Số icon mỗi bộ gần như không đổi mà đếm thì tốn một truy vấn mỗi bộ: giữ kết quả trong 5 phút.
+const SETS_CACHE_TTL_MS = 5 * 60 * 1000;
+
+export function createIconCatalog({ service, repository, now = Date.now }: CatalogDeps) {
+  let setsCache: { loadedAt: number; items: McpIconSet[] } | null = null;
+
   async function loadSets(): Promise<IconSetRecord[]> {
     return service.listSets();
   }
@@ -119,17 +125,20 @@ export function createIconCatalog({ service, repository }: CatalogDeps) {
 
   return {
     async listSets(): Promise<McpIconSet[]> {
+      if (setsCache && now() - setsCache.loadedAt < SETS_CACHE_TTL_MS) return setsCache.items;
       const sets = await loadSets();
       const counts = await Promise.all(
         sets.map((set) => repository.listIcons({ setId: set.id, status: ICON_STATUS.published, offset: 0, limit: 1 })),
       );
-      return sets.map((set, index) => ({
+      const items = sets.map((set, index) => ({
         slug: set.slug,
         name: set.name,
         style: set.style,
         iconCount: counts[index]?.total ?? 0,
         usage: USAGE_BY_SET_SLUG[set.slug] ?? USAGE_BY_STYLE[set.style],
       }));
+      setsCache = { loadedAt: now(), items };
+      return items;
     },
 
     async listCategories(): Promise<McpIconCategory[]> {

@@ -207,10 +207,15 @@ export function createSupabaseIconRepository(supabase: SupabaseClient): IconRepo
       if (filter.categoryId) request = request.eq('category_id', filter.categoryId);
       if (filter.status) request = request.eq('status', filter.status);
       if (filter.activeOnly) request = request.neq('status', ICON_STATUS.archived);
-      const term = filter.query ? toSafeSearchTerm(filter.query) : '';
-      if (term) {
-        const slugTerm = toSafeSearchTerm(toSlugSearchTerm(term));
-        request = request.or(`slug.ilike.*${slugTerm}*,name.ilike.*${term}*`);
+      const terms = [filter.query, ...(filter.alternativeQueries ?? [])]
+        .map((term) => (term ? toSafeSearchTerm(term) : ''))
+        .filter((term) => term.length > 0);
+      if (terms.length > 0) {
+        const conditions = terms.flatMap((term) => [
+          `slug.ilike.*${toSafeSearchTerm(toSlugSearchTerm(term))}*`,
+          `name.ilike.*${term}*`,
+        ]);
+        request = request.or(conditions.join(','));
       }
 
       const ordered =

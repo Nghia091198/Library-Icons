@@ -1,4 +1,5 @@
 import { categorizeIcon } from '@/server/icons/categorizeIcon';
+import { expandSearchTerms, rankBySearchRelevance } from '@/server/icons/iconSearch';
 import {
   CONFLICT_KIND,
   ICON_LIST_ORDER,
@@ -53,6 +54,8 @@ export const DEFAULT_OUTLINE_STROKE_WIDTH = 1.5;
 const PUBLISH_BATCH_SIZE = 100;
 // Nhóm gần như không đổi; cache để mỗi lần cuộn gallery không phải tra lại bảng nhóm.
 const CATEGORY_CACHE_TTL_MS = 5 * 60 * 1000;
+// Tìm kiếm xếp hạng trong tối đa ngần này kết quả khớp; từ khoá quá rộng nên gõ cụ thể hơn.
+export const SEARCH_RANK_WINDOW = 200;
 // Chặn vòng lặp vô hạn nếu có bản nháp không publish được: tối đa 100 × 100 icon mỗi lần gọi.
 const MAX_PUBLISH_ROUNDS = 100;
 
@@ -433,16 +436,37 @@ export function createIconService({ repository, now = () => new Date() }: IconSe
         categoryId = category.id;
       }
 
-      const { items, total } = await repository.listIcons({
+      const filter = {
         status: ICON_STATUS.published,
         categoryId,
         setId: params.setId,
-        query: params.q?.trim() || undefined,
         orderBy: ICON_LIST_ORDER.name,
-        offset: (page - 1) * pageSize,
-        limit: pageSize,
+      };
+      const offset = (page - 1) * pageSize;
+      const terms = params.q ? expandSearchTerms(params.q) : [];
+
+      if (terms.length === 0) {
+        const { items, total } = await repository.listIcons({ ...filter, offset, limit: pageSize });
+        return { items: items.map(toPublicIcon), total, page, pageSize };
+      }
+
+      // Tìm kiếm: lấy một cửa sổ kết quả khớp, xếp theo mức độ liên quan rồi mới cắt trang,
+      // để kết quả khớp nhất (ví dụ "search" cho từ khoá "search") luôn đứng đầu thay vì theo A→Z.
+      const [query, ...alternativeQueries] = terms;
+      const { items, total } = await repository.listIcons({
+        ...filter,
+        query,
+        alternativeQueries,
+        offset: 0,
+        limit: SEARCH_RANK_WINDOW,
       });
-      return { items: items.map(toPublicIcon), total, page, pageSize };
+      const ranked = rankBySearchRelevance(items, terms);
+      return {
+        items: ranked.slice(offset, offset + pageSize).map(toPublicIcon),
+        total: Math.min(total, SEARCH_RANK_WINDOW),
+        page,
+        pageSize,
+      };
     },
 
     async publishDrafts(filter: PublishDraftsRequest, actor: string): Promise<PublishDraftsResponse> {
