@@ -1,7 +1,7 @@
 import { Typography } from 'antd';
 import { useState } from 'react';
 import { scrollToSection, useActiveSection } from '@/client/common/useActiveSection';
-import { GALLERY_COLOR } from '@/client/gallery/galleryTheme';
+import { DARK_COLOR } from '@/client/common/darkTheme';
 import { GUIDE_SECTIONS, type GuideSection } from '@/client/gallery/guideSections';
 
 const SECTION_IDS = GUIDE_SECTIONS.map((section) => section.id);
@@ -14,7 +14,7 @@ interface TocButtonProps {
 
 function TocButton({ section, index, isActive }: TocButtonProps) {
   const [isHovered, setHovered] = useState(false);
-  const background = isActive ? GALLERY_COLOR.surfaceRaised : isHovered ? GALLERY_COLOR.surface : 'transparent';
+  const background = isActive ? DARK_COLOR.surfaceRaised : isHovered ? DARK_COLOR.surface : 'transparent';
 
   return (
     <button
@@ -30,9 +30,9 @@ function TocButton({ section, index, isActive }: TocButtonProps) {
         width: '100%',
         padding: '9px 10px',
         borderRadius: 10,
-        border: `1px solid ${isActive ? GALLERY_COLOR.primary : 'transparent'}`,
+        border: `1px solid ${isActive ? DARK_COLOR.primary : 'transparent'}`,
         background,
-        color: isActive ? GALLERY_COLOR.text : GALLERY_COLOR.textMuted,
+        color: isActive ? DARK_COLOR.text : DARK_COLOR.textMuted,
         font: 'inherit',
         fontWeight: isActive ? 600 : 400,
         textAlign: 'left',
@@ -52,9 +52,9 @@ function TocButton({ section, index, isActive }: TocButtonProps) {
           justifyContent: 'center',
           fontSize: 12,
           fontWeight: 700,
-          color: isActive ? '#ffffff' : GALLERY_COLOR.textMuted,
-          background: isActive ? GALLERY_COLOR.primary : GALLERY_COLOR.surfaceRaised,
-          border: `1px solid ${isActive ? GALLERY_COLOR.primary : GALLERY_COLOR.border}`,
+          color: isActive ? '#ffffff' : DARK_COLOR.textMuted,
+          background: isActive ? DARK_COLOR.primary : DARK_COLOR.surfaceRaised,
+          border: `1px solid ${isActive ? DARK_COLOR.primary : DARK_COLOR.border}`,
         }}
       >
         {index}
