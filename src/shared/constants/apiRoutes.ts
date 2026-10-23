@@ -20,6 +20,8 @@ export const API_ROUTE = {
   adminIconsPublishDrafts: `${API_PREFIX.admin}/icons/publish-drafts`,
   docs: `${API_PREFIX.root}/docs`,
   openApiSpec: `${API_PREFIX.root}/openapi.json`,
+  // Endpoint MCP (Streamable HTTP) cho agent; nằm dưới /api để Vercel chuyển vào hàm serverless.
+  mcp: `${API_PREFIX.root}/mcp`,
 } as const;
 
 // Dạng {param} theo cú pháp OpenAPI; dùng fillRoute để tạo URL thật.
